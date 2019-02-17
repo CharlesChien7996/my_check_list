@@ -1,21 +1,30 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:my_check_list/models/note.dart';
+import 'package:my_check_list/utils/database_helper.dart';
+import 'package:intl/intl.dart';
 
 class NoteDetail extends StatefulWidget {
-  String appBarTitle;
-  NoteDetail(this.appBarTitle);
+  final String appBarTitle;
+  final Note note;
+  NoteDetail(this.note, this.appBarTitle);
   @override
-  State<StatefulWidget> createState() => NoteDetailState(this.appBarTitle);
+  State<StatefulWidget> createState() => NoteDetailState(this.note, this.appBarTitle);
 }
 
 class NoteDetailState extends State<NoteDetail> {
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
+  DatabaseHelper helper = DatabaseHelper();
   String appBarTitle;
-  NoteDetailState(this.appBarTitle);
+  Note note;
+
+  NoteDetailState(this.note, this.appBarTitle);
   @override
   Widget build(BuildContext context) {
     TextStyle textStyle = Theme.of(context).textTheme.title;
-    // TODO: implement build
+    titleController.text = note.title;
+    descriptionController.text = note.description;
     return WillPopScope(
       onWillPop: () {
         moveToLastScreen();
@@ -40,6 +49,7 @@ class NoteDetailState extends State<NoteDetail> {
                   style: textStyle,
                   onChanged: (value) {
                     print('Something changed in Title Text Field $value');
+                    updateTitle();
                   },
                   decoration: InputDecoration(
                       labelText: 'Title',
@@ -55,6 +65,7 @@ class NoteDetailState extends State<NoteDetail> {
                   style: textStyle,
                   onChanged: (value) {
                     print('Something changed in Description Text Field $value');
+                    updateDescription();
                   },
                   decoration: InputDecoration(
                       labelText: 'Description',
@@ -75,6 +86,7 @@ class NoteDetailState extends State<NoteDetail> {
                           onPressed: (){
                             setState(() {
                               print('Save button clicked');
+                              _save();
                             });
                           },
                     )
@@ -103,6 +115,61 @@ class NoteDetailState extends State<NoteDetail> {
   }
 
   void moveToLastScreen() {
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
-}
+
+  void updateTitle() {
+    note.title = titleController.text;
+  }
+
+  void updateDescription() {
+    note.description = descriptionController.text;
+  }
+
+  void _save() async {
+
+    moveToLastScreen();
+    note.date = DateFormat.yMMMd().format(DateTime.now());
+    int result;
+    if (note.id != null) {
+      // 更新
+      result = await helper.updateNote(note);
+    }else {
+      // 新增
+      result = await helper.insertNote(note);
+    }
+
+    if (result != 0) {
+      // 成功
+      _showAlertDialog('Note saved successfully');
+    }else {
+      // 失敗
+      _showAlertDialog('Error');
+    }
+  }
+
+  void delete() async {
+
+    moveToLastScreen();
+
+    if (note.id == null) {
+      // 刪除新的資料
+      _showAlertDialog('No Note was deleted');
+      return;
+    }
+
+    int result = await helper.deleteNote(note.id);
+    if (result != 0) {
+      // 成功
+      _showAlertDialog('Note saved successfully');
+    }else {
+      // 失敗
+      _showAlertDialog('Error');
+    }
+  }
+
+  void _showAlertDialog(String message) {
+    AlertDialog alertDialog = AlertDialog(title: Text(''), content: Text(message),);
+    showDialog(context: context, builder: (_) => alertDialog);
+  }
+ }
