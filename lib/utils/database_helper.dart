@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'dart:async';
+import 'package:path/path.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:my_check_list/models/note.dart';
@@ -9,10 +10,10 @@ class DatabaseHelper {
   static Database _database;
 
   String noteTable = 'note_table';
-  String id = 'id';
-  String title = 'title';
-  String description = 'description';
-  String date = 'date';
+  String colId = 'id';
+  String colTitle = 'title';
+  String colDescription = 'description';
+  String colDate = 'date';
 
   DatabaseHelper._createInstance();
   factory DatabaseHelper() {
@@ -29,30 +30,38 @@ class DatabaseHelper {
     return _database;
   }
 
+//  static Future<String> initDb(String dbName) async {
+//    String path = join(databasePath, dbName);
+//    if (await Directory(dirname(path)).exists()) {
+//    } else {
+//      try {
+//        await Directory(dirname(path)).create(recursive: true);
+//      } catch (e) {
+//        print(e);
+//      }
+//    }
+//    return path;
+//  }
+
   Future<Database> initializeDatabase() async {
     // 取得資料路徑
-    Directory directory = await getApplicationDocumentsDirectory();
-    String path = directory.path + 'notes.database';
+    var databasesPath = await getDatabasesPath();
+    String path = join(databasesPath, 'notes.database');
 
-    var notesDatabase = openDatabase(path, version: 1, onCreate: _createDb);
+    var notesDatabase = await openDatabase(path, version: 1, onCreate: _createDb);
     return notesDatabase;
   }
 
   void _createDb(Database database, int newVersion) async{
-    await database.execute('CREATE TABLE $noteTable($id INTEGER PRIMARY KEY AUTOINCREMENT, $title TEXT, $description TEXT, $date TEXT)');
+    await database.execute('CREATE TABLE $noteTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT, $colDescription TEXT, $colDate TEXT)');
   }
 
   // 查詢
-  Future<List<Note>> getNoteList() async{
+  Future<List<Map<String, dynamic>>> getNoteMapList() async{
     Database database = await this.database;
 //    var result = database.rawQuery('SELECT * FROM $noteTable order by $date ASC'); 同下
-    var result = await database.query(noteTable, orderBy: '$date ASC');
-    var count = result.length;
-    List<Note> noteList = List<Note>();
-    for (int i = 0; i < count; i++) {
-      noteList.add(Note.fromMapObject(result[i]));
-    }
-    return noteList;
+    var result = await database.query(noteTable, orderBy: '$colDate ASC');
+    return result;
   }
 
   // 新增
@@ -64,13 +73,13 @@ class DatabaseHelper {
   // 刪除
   Future<int> deleteNote(int id) async {
     Database database = await this.database;
-    var result = await database.rawDelete('DELETE FROM $noteTable WHERE $this.id = $id');
+    var result = await database.rawDelete('DELETE FROM $noteTable WHERE $colId = $id');
     return result;
   }
   // 修改
   Future<int> updateNote(Note note) async {
     Database database = await this.database;
-    var result = await database.update(noteTable, note.toMap(), where: '$id = ?', whereArgs: [note.id]);
+    var result = await database.update(noteTable, note.toMap(), where: '$colId = ?', whereArgs: [note.id]);
     return result;
   }
 
@@ -81,4 +90,14 @@ class DatabaseHelper {
     int result = Sqflite.firstIntValue(noteList);
     return result;
   }
+
+  Future<List<Note>> getNoteList() async{
+    var noteMapList = await getNoteMapList();
+    int count = noteMapList.length;
+    List<Note> noteList = List<Note>();
+    for (int i = 0; i < count; i++) {
+      noteList.add(Note.fromMapObject(noteMapList[i]));
+    }
+    return noteList;
+}
 }
