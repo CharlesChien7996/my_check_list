@@ -13,8 +13,10 @@ class NoteDetail extends StatefulWidget {
 }
 
 class NoteDetailState extends State<NoteDetail> {
+
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
+  var _formKey = GlobalKey<FormState>();
   DatabaseHelper helper = DatabaseHelper();
   String appBarTitle;
   Note note;
@@ -38,76 +40,90 @@ class NoteDetailState extends State<NoteDetail> {
           }),
           title: Text(appBarTitle),
         ),
-        body: Padding(
-          padding: EdgeInsets.only(top: 15.0, left: 10.0, right: 10.0),
-          child: ListView(
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                child: TextField(
-                  controller: titleController,
-                  style: textStyle,
-                  onChanged: (value) {
-                    print('Something changed in Title Text Field $value');
-                    updateTitle();
-                  },
-                  decoration: InputDecoration(
-                      labelText: 'Title',
-                      labelStyle: textStyle,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5.0))),
+        body: Form(
+          key: _formKey,
+          child: Padding(
+            padding: EdgeInsets.only(top: 15.0, left: 10.0, right: 10.0),
+            child: ListView(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                  child: TextFormField(
+                    controller: titleController,
+                    style: textStyle,
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return 'Please enter title';
+                      }else {
+                        print('Something changed in Title Text Field $value');
+                        updateTitle();
+                      }
+                    },
+                    decoration: InputDecoration(
+                        labelText: 'Title',
+                        labelStyle: TextStyle(color: Colors.grey),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5.0))),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                child: TextField(
-                  controller: descriptionController,
-                  style: textStyle,
-                  onChanged: (value) {
-                    print('Something changed in Description Text Field $value');
-                    updateDescription();
-                  },
-                  decoration: InputDecoration(
-                      labelText: 'Description',
-                      labelStyle: textStyle,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5.0))),
+                Padding(
+                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                  child: TextFormField(
+                    controller: descriptionController,
+                    style: textStyle,
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return 'Please enter description';
+                      }else {
+                        print('Something changed in Description Text Field $value');
+                        updateDescription();
+                      }
+                    },
+                    decoration: InputDecoration(
+                        labelText: 'Description',
+                        labelStyle: TextStyle(color: Colors.grey),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5.0))),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                        child: RaisedButton(
-                          color: Theme.of(context).primaryColorDark,
-                          textColor: Theme.of(context).primaryColorLight,
-                          child: Text('Save', textScaleFactor: 1.5,),
-                          onPressed: (){
-                            setState(() {
-                              print('Save button clicked');
-                              _save();
-                            });
-                          },
-                    )
-                    ),
-                    Container(width: 5.0),
-                    Expanded(
-                        child: RaisedButton(
-                          color: Theme.of(context).primaryColorDark,
-                          textColor: Theme.of(context).primaryColorLight,
-                          child: Text('Delete', textScaleFactor: 1.5,),
-                          onPressed: (){
-                            setState(() {
-                              print('Delete button clicked');
-                            });
-                          },
-                        )
-                    )
-                  ],
-                ),
-              )
-            ],
+                Padding(
+                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                          child: RaisedButton(
+                            color: Theme.of(context).primaryColorDark,
+                            textColor: Theme.of(context).primaryColorLight,
+                            child: Text('Save', textScaleFactor: 1.5,),
+                            onPressed: (){
+                              setState(() {
+                                print('Save button clicked');
+                                if (_formKey.currentState.validate()) {
+                                  _save();
+                                }
+                              });
+                            },
+                      )
+                      ),
+                      Container(width: 5.0),
+                      Expanded(
+                          child: RaisedButton(
+                            color: Theme.of(context).primaryColorDark,
+                            textColor: Theme.of(context).primaryColorLight,
+                            child: Text('Delete', textScaleFactor: 1.5,),
+                            onPressed: (){
+                              setState(() {
+                                print('Delete button clicked');
+                                _delete();
+                              });
+                            },
+                          )
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
@@ -148,7 +164,7 @@ class NoteDetailState extends State<NoteDetail> {
     }
   }
 
-  void delete() async {
+  void _delete() async {
 
     moveToLastScreen();
 

@@ -74,13 +74,13 @@ class NoteListState extends State<NoteList> {
     int result = await databaseHelper.deleteNote(note.id);
     // 顯示訊息
     if (result != 0) {
-      _showSnacBar(context, 'Note deleted successfully');
+      _showSnackBar(context, 'Note deleted successfully');
       // 更新畫面
       updateListView();
     }
   }
 
-  void _showSnacBar(BuildContext context, String message) {
+  void _showSnackBar(BuildContext context, String message) {
     final snackBar = SnackBar(content: Text(message));
     Scaffold.of(context).showSnackBar(snackBar);
   }

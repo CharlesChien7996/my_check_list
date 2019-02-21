@@ -30,19 +30,6 @@ class DatabaseHelper {
     return _database;
   }
 
-//  static Future<String> initDb(String dbName) async {
-//    String path = join(databasePath, dbName);
-//    if (await Directory(dirname(path)).exists()) {
-//    } else {
-//      try {
-//        await Directory(dirname(path)).create(recursive: true);
-//      } catch (e) {
-//        print(e);
-//      }
-//    }
-//    return path;
-//  }
-
   Future<Database> initializeDatabase() async {
     // 取得資料路徑
     var databasesPath = await getDatabasesPath();
